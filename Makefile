@@ -6,7 +6,7 @@ TARGETS := $(basename $(SRC))
 
 # 编译器和参数
 CC := gcc
-CFLAGS := -Wall -O2
+CFLAGS = -Wall -g
 
 # 默认目标：编译所有
 all: $(TARGETS)
