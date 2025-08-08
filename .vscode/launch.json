@@ -2,10 +2,50 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "调试camera_event_listener",
+            "name": "调试 camera_event_listener",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/camera_event_listener",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "启用漂亮打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "调试 OpenCard",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/OpenCard",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "启用漂亮打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "调试 OpenCamera",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/OpenCamera",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

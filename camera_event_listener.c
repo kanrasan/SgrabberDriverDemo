@@ -1,68 +1,73 @@
-#include <stdio.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <unistd.h>
-#include <string.h>
-#include <ctype.h>
+#include "SCardDefine_Linux.h"
+
 
 int main() {
-    int cameraCount = 4; // 设备数量
-    struct pollfd fds[16]; // 最多16个
+    int fd_user = open(CARD_FILE, O_RDWR | O_SYNC);
+    if (fd_user < 0) {
+        perror("open device failed");
+        return -1;
+    }
+    printf("device opened\n");
+
+    struct pollfd fds_cameraStatus[5]; 
     char devName[128];
 
     // 打开设备文件
-    for (int i = 0; i < cameraCount; i++) {
+    for (int i = 0; i < XDMA_CAMERA_COUNT; i++) {
         snprintf(devName, sizeof(devName),
                  "/dev/xdma0_cameraStatusEvents_%d", i);
-        fds[i].fd = open(devName, O_RDONLY);
-        if (fds[i].fd < 0) {
+        fds_cameraStatus[i].fd = open(devName, O_RDONLY);
+        if (fds_cameraStatus[i].fd < 0) {
             perror(devName);
-            return 1;
+            goto cleanup_fd_user;
         }
-        fds[i].events = POLLIN;
+        fds_cameraStatus[i].events = POLLIN;
     }
 
     // 把标准输入也加入poll监听
-    fds[cameraCount].fd = STDIN_FILENO; // 0
-    fds[cameraCount].events = POLLIN;
+    fds_cameraStatus[XDMA_CAMERA_COUNT].fd = STDIN_FILENO; // 0
+    fds_cameraStatus[XDMA_CAMERA_COUNT].events = POLLIN;
 
-    printf("开始监控 %d 个设备...\n", cameraCount);
+    printf("开始监控 %d 个设备...\n", XDMA_CAMERA_COUNT);
 
     while (1) {
-        printf("是否退出？（请输入Y）\n");
+        printf("是否退出?(请输入Y)\n");
 
-        int ret = poll(fds, cameraCount + 1, -1); // 加1监听stdin
+        int ret = poll(fds_cameraStatus, XDMA_CAMERA_COUNT + 1, -1); // 加1监听stdin
         if (ret < 0) {
             perror("poll");
             break;
         }
 
         // 检查设备事件
-        for (int i = 0; i < cameraCount; i++) {
-            if (fds[i].revents & POLLIN) {
+        for (int i = 0; i < XDMA_CAMERA_COUNT; i++) {
+            if (fds_cameraStatus[i].revents & POLLIN) {
                 printf("设备 %d 有事件！\n", i);
-
-                char buf[64];
-                int n = read(fds[i].fd, buf, sizeof(buf) - 1);
-                if (n > 0) {
-                    buf[n] = '\0';
-                    printf("设备 %d 数据: %s\n", i, buf);
+                struct user_event0_status evt;
+                evt.index=i;
+                evt.status=0;
+                if (ioctl(fd_user, IOCTL_XDMA_GET_USER_EVENT0_STATUS, &evt) < 0) {
+                    printf("ioctl获取设备状态失败");
+                }
+                else
+                {
+                    printf("设备 %d 状态：%u\n", i,evt.status);
                 }
             }
-            if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (fds_cameraStatus[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 printf("设备 %d 出错或断开！\n", i);
             }
         }
 
         // 检查标准输入
-        if (fds[cameraCount].revents & POLLIN) {
+        if (fds_cameraStatus[XDMA_CAMERA_COUNT].revents & POLLIN) {
             char input[16];
             if (fgets(input, sizeof(input), stdin) != NULL) {
                 // 去除换行符
                 input[strcspn(input, "\r\n")] = 0;
                 if (strlen(input) == 1 && (input[0] == 'Y' || input[0] == 'y')) {
                     printf("收到退出指令，退出程序。\n");
-                    goto cleanup;
+                    goto cleanup_fds_cameraStatus;
                 } else {
                     printf("未退出，继续监控...\n");
                 }
@@ -70,9 +75,11 @@ int main() {
         }
     }
 
-cleanup:
-    for (int i = 0; i < cameraCount; i++) {
-        close(fds[i].fd);
+cleanup_fds_cameraStatus:
+    for (int i = 0; i < XDMA_CAMERA_COUNT; i++) {
+        close(fds_cameraStatus[i].fd);
     }
+cleanup_fd_user:
+    close(fd_user);
     return 0;
 }

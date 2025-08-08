@@ -1,0 +1,28 @@
+[
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-Wall",
+            "-g",
+            "-o",
+            "OpenCamera",
+            "OpenCamera.c"
+        ],
+        "directory": "/home/wangkaifeng/dev/SgrabberDriverDemo",
+        "file": "OpenCamera.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-Wall",
+            "-g",
+            "-o",
+            "OpenCard",
+            "OpenCard.c"
+        ],
+        "directory": "/home/wangkaifeng/dev/SgrabberDriverDemo",
+        "file": "OpenCard.c"
+    }
+]
